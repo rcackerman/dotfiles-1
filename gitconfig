@@ -1,7 +1,7 @@
 [user]
   name = Rebecca Ackerman
 [push]
-  default = current
+  default = simple
 [color]
   ui = auto
 [alias]
@@ -14,6 +14,10 @@
   excludesfile = ~/.gitignore
 [merge]
   ff = only
+  tool = sublime
+[mergetool "sublime"]
+  cmd = subl -w $MERGED
+  trustExitCode = false
 [commit]
   template = ~/.gitmessage
 [fetch]
