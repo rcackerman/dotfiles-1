@@ -1,50 +1,65 @@
+"Rebecca's vimrc
+
+"
+"System
+"
 set encoding=utf-8
 
-" Leader
-let mapleader = " "
+let mapleader = "\<Space>"	" Set leader to the spacebar
 
-set backspace=2   " Backspace deletes like most programs in insert mode
 set nobackup
 set nowritebackup
 set noswapfile    " http://robots.thoughtbot.com/post/18739402579/global-gitignore#comment-458413287
-set history=50
-set ruler         " show the cursor position all the time
-set showcmd       " display incomplete commands
-set incsearch     " do incremental searching
-set laststatus=2  " Always display the status line
-set autowrite     " Automatically :write before running commands
-set modelines=0   " Disable modelines as a security precaution
+set history=50							"the last 50 commands
+set autowrite     					"Automatically :write before running commands
+set modelines=0   					"Disable modelines as a security precaution
 set nomodeline
 
-" Switch syntax highlighting on, when the terminal has colors
-" Also switch on highlighting the last used search pattern.
-if (&t_Co > 2 || has("gui_running")) && !exists("syntax_on")
-  syntax on
-endif
+"Stupid lazy-shift holding errors
+cnoremap W w
+cnoremap WQ wq
+cnoremap wQ wq
+cnoremap Q q
 
+"Set spell check for text files
+autocmd FileType gitcommit,mail,mkd,text set spell
+
+"prevent vim from backing up crontabs
+set backupskip=/tmp/*,/private/tmp/*
+
+"
+"Plugins!
+"
 if filereadable(expand("~/.vimrc.bundles"))
   source ~/.vimrc.bundles
 endif
 
-" Load matchit.vim, but only if the user hasn't installed a newer version.
-if !exists('g:loaded_matchit') && findfile('plugin/matchit.vim', &rtp) ==# ''
-  runtime! macros/matchit.vim
-endif
 
-filetype plugin indent on
+"
+"Display
+"
+set background=dark			"Set colorscheme
+colorscheme solarized
+set guifont=Menlo:h20		"Set font and size
 
+set nowrap							"Set no word wrap
+set number							"Set line numbers
+set cursorline					"Highlight the cursor line
+
+set textwidth=80				" Make it obvious where 80 characters is
+set colorcolumn=+1
+
+" Numbers
+set number
+set numberwidth=5
+
+set splitbelow					"New split panes open to right and to bottom
+set splitright
+
+"Set syntax highlighting for specific file types
 augroup vimrcEx
   autocmd!
 
-  " When editing a file, always jump to the last known cursor position.
-  " Don't do it for commit messages, when the position is invalid, or when
-  " inside an event handler (happens when dropping a file on gvim).
-  autocmd BufReadPost *
-    \ if &ft != 'gitcommit' && line("'\"") > 0 && line("'\"") <= line("$") |
-    \   exe "normal g`\"" |
-    \ endif
-
-  " Set syntax highlighting for specific file types
   autocmd BufRead,BufNewFile *.md set filetype=markdown
   autocmd BufRead,BufNewFile .{jscs,jshint,eslint}rc set filetype=json
   autocmd BufRead,BufNewFile aliases.local,zshrc.local,*/zsh/configs/* set filetype=sh
@@ -52,6 +67,113 @@ augroup vimrcEx
   autocmd BufRead,BufNewFile tmux.conf.local set filetype=tmux
   autocmd BufRead,BufNewFile vimrc.local set filetype=vim
 augroup END
+
+" Status line
+set showmode						"Show the mode
+set ruler								"Show column and line number at bottom right
+set wildmenu						"Get the nice tab through menu
+set laststatus=2 				"Always show status line
+set statusline=%f 			"Path to the file
+set statusline+=%= 			"Switch to the right side
+set statusline+=%l 			"Current line
+set statusline+=/ 			"Separator
+set statusline+=%L 			"Total lines
+
+
+"
+"Searching
+"
+set showmatch 					" Show matching brackets and parentheses
+set hlsearch						" Highlight search terms
+set ignorecase					" Ignore case in search
+set incsearch						" find as you type search
+"Make search always go the same direction
+noremap <silent> n /<CR>
+noremap <silent> N ?<CR>
+
+
+"
+"Key remaps
+"
+inoremap jk <esc>		" Map 'jk' to escape
+" Make j,k,0,and $ behave the same way with wrapped lines
+noremap  <buffer> <silent> k gk
+noremap  <buffer> <silent> j gj
+noremap  <buffer> <silent> 0 g0
+noremap  <buffer> <silent> $ g$
+
+"Double tap space to comment
+map <leader><leader> <plug>NERDCommenterToggle
+
+"Copy-paste
+xnoremap p pgvy			" Allow for pasting multiple lines
+"Copy and paste to system clipboard with space y and space d
+vnoremap <Leader>y "+y
+vnoremap <Leader>d "+d
+nnoremap <Leader>p "+p
+nnoremap <Leader>P "+P
+vnoremap <Leader>p "+p
+vnoremap <Leader>P "+P
+
+vnoremap <tab> >gv "Indent visual mode selection with tab
+vnoremap <s-tab> <gv "Unindent visual mode selection with shift-tab
+
+"Code folding key mappings
+"ff creates a fold
+"fa toggles a fold, fc closes, fo opens
+set foldenable
+set foldmethod=manual
+vnoremap ff zf
+nnoremap fa za
+vnoremap fc zc
+vnoremap fo zo
+
+" Move between linting errors
+nnoremap ]r :ALENextWrap<CR>
+nnoremap [r :ALEPreviousWrap<CR>
+
+" Map Ctrl + p to open fuzzy find (FZF)
+nnoremap <c-p> :Files<cr>
+
+
+"
+"Editing
+"
+set autoindent		" Copy indent from current line when starting a new line
+set expandtab			" Tab to spaces
+set tabstop=4			" Tab is default 4 spaces
+set softtabstop=0
+set shiftwidth=4
+set smarttab
+" Treat <li> and <p> tags like the block tags they are
+let g:html_indent_tags = 'li\|p'
+
+" Display extra whitespace
+set list listchars=tab:»·,trail:·,nbsp:·
+
+" Use one space, not two, after punctuation.
+set nojoinspaces
+
+
+
+"
+"Plugin config
+"
+"Nerd tree
+noremap \ :NERDTreeToggle<CR>
+let g:NERDTreeDirArrows = 1
+let g:NERDTreeDirArrowExpandable = '▸'
+let g:NERDTreeDirArrowCollapsible = '▾'
+
+"open a NERDTree automatically when vim starts up if no files were specified
+autocmd StdinReadPre * let s:std_in=1
+autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
+
+"close vim if the only window left open is a NERDTree
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+
+"Delimitmate
+let delimitMate_matchpairs = "(:),[:],{:}"
 
 " ALE linting events
 augroup ale
@@ -70,112 +192,10 @@ augroup ale
   endif
 augroup END
 
-" When the type of shell script is /bin/sh, assume a POSIX-compatible
-" shell for syntax highlighting purposes.
-let g:is_posix = 1
 
-" Softtabs, 2 spaces
-set tabstop=2
-set shiftwidth=2
-set shiftround
-set expandtab
-
-" Display extra whitespace
-set list listchars=tab:»·,trail:·,nbsp:·
-
-" Use one space, not two, after punctuation.
-set nojoinspaces
-
-" Use The Silver Searcher https://github.com/ggreer/the_silver_searcher
-if executable('ag')
-  " Use Ag over Grep
-  set grepprg=ag\ --nogroup\ --nocolor
-
-  " Use ag in fzf for listing files. Lightning fast and respects .gitignore
-  let $FZF_DEFAULT_COMMAND = 'ag --literal --files-with-matches --nocolor --hidden -g ""'
-
-  if !exists(":Ag")
-    command -nargs=+ -complete=file -bar Ag silent! grep! <args>|cwindow|redraw!
-    nnoremap \ :Ag<SPACE>
-  endif
-endif
-
-" Make it obvious where 80 characters is
-set textwidth=80
-set colorcolumn=+1
-
-" Numbers
-set number
-set numberwidth=5
-
-" Tab completion
-" will insert tab at beginning of line,
-" will use completion if not at beginning
-set wildmode=list:longest,list:full
-function! InsertTabWrapper()
-    let col = col('.') - 1
-    if !col || getline('.')[col - 1] !~ '\k'
-        return "\<Tab>"
-    else
-        return "\<C-p>"
-    endif
-endfunction
-inoremap <Tab> <C-r>=InsertTabWrapper()<CR>
-inoremap <S-Tab> <C-n>
-
-" Switch between the last two files
-nnoremap <Leader><Leader> <C-^>
-
-" Get off my lawn
-nnoremap <Left> :echoe "Use h"<CR>
-nnoremap <Right> :echoe "Use l"<CR>
-nnoremap <Up> :echoe "Use k"<CR>
-nnoremap <Down> :echoe "Use j"<CR>
-
-" vim-test mappings
-nnoremap <silent> <Leader>t :TestFile<CR>
-nnoremap <silent> <Leader>s :TestNearest<CR>
-nnoremap <silent> <Leader>l :TestLast<CR>
-nnoremap <silent> <Leader>a :TestSuite<CR>
-nnoremap <silent> <Leader>gt :TestVisit<CR>
-
-" Run commands that require an interactive shell
-nnoremap <Leader>r :RunInInteractiveShell<Space>
-
-" Treat <li> and <p> tags like the block tags they are
-let g:html_indent_tags = 'li\|p'
-
-" Set tags for vim-fugitive
-set tags^=.git/tags
-
-" Open new split panes to right and bottom, which feels more natural
-set splitbelow
-set splitright
-
-" Quicker window movement
-nnoremap <C-j> <C-w>j
-nnoremap <C-k> <C-w>k
-nnoremap <C-h> <C-w>h
-nnoremap <C-l> <C-w>l
-
-" Move between linting errors
-nnoremap ]r :ALENextWrap<CR>
-nnoremap [r :ALEPreviousWrap<CR>
-
-" Map Ctrl + p to open fuzzy find (FZF)
-nnoremap <c-p> :Files<cr>
-
-" Set spellfile to location that is guaranteed to exist, can be symlinked to
-" Dropbox or kept in Git and managed outside of thoughtbot/dotfiles using rcm.
-set spellfile=$HOME/.vim-spell-en.utf-8.add
-
-" Autocomplete with dictionary words when spell check is on
-set complete+=kspell
-
-" Always use vertical diffs
-set diffopt+=vertical
-
-" Local config
+"
+"Source local .vimrc
+"
 if filereadable($HOME . "/.vimrc.local")
   source ~/.vimrc.local
 endif
